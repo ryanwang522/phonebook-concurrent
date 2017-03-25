@@ -18,7 +18,13 @@ typedef struct __PHONE_BOOK_ENTRY {
     struct __PHONE_BOOK_ENTRY *pNext;
 } entry;
 
-entry *findName(char lastname[], entry *pHead);
-entry *append(char lastName[], entry *e);
+//entry *findName(char lastname[], entry *pHead);
+//entry *append(char lastName[], entry *e);
 
+extern struct __API {
+    void (*initialize)();
+    entry *(*findName)(char lastName[]);
+    entry *(*append)(char lastName[]);
+    void (*free)();
+} Phonebook;
 #endif

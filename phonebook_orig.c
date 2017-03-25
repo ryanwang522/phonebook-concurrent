@@ -5,8 +5,10 @@
 
 #include "phonebook_orig.h"
 
+static entry *headPtr;
+
 /* original version */
-entry *findName(char lastname[], entry *pHead)
+static entry *findName(char lastname[], entry *pHead)
 {
     while (pHead) {
         if (strcasecmp(lastname, pHead->lastName) == 0)
@@ -16,7 +18,7 @@ entry *findName(char lastname[], entry *pHead)
     return NULL;
 }
 
-entry *append(char lastName[], entry *e)
+static entry *append(char lastName[], entry *e)
 {
     /* allocate memory for the new entry and put lastName */
     e->pNext = (entry *) malloc(sizeof(entry));
@@ -26,3 +28,55 @@ entry *append(char lastName[], entry *e)
 
     return e;
 }
+
+static void phonebook_init()
+{
+    headPtr = (entry *) malloc(sizeof(entry));
+    headPtr->pNext = NULL;
+}
+
+static entry *phonebook_findName(char lastName[])
+{
+    return findName(lastName, headPtr);
+}
+
+static entry *phonebook_append(char *fileName)
+{
+    FILE *fp = fopen(fileName, "r");
+    if (!fp) {
+        printf("cannot open the file!\n");
+        return NULL;
+    }
+
+    int i = 0;
+    char line[MAX_LAST_NAME_SIZE];
+    entry *e = headPtr;
+
+    while (fgets(line, sizeof(line), fp)) {
+        while (line[i] != '\0') i++;
+
+        line[i - 1] = '\0';
+        i = 0;
+        e = append(line, e);
+    }
+
+    fclose(fp);
+    return headPtr;
+}
+
+static void phonebook_free()
+{
+    entry *e;
+    while (headPtr) {
+        e = headPtr;
+        headPtr = headPtr -> pNext;
+        free(e);
+    }
+}
+
+struct __API Phonebook = {
+    .initialize = phonebook_init,
+    .findName = phonebook_findName,
+    .append = phonebook_append,
+    .free = phonebook_free,
+};
