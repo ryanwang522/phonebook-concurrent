@@ -25,7 +25,6 @@ static pthread_t threads[THREAD_NUM];
 static thread_arg *thread_args[THREAD_NUM];
 static char *map;
 static off_t file_size;
-static int count = 0;
 
 static entry *findName(char lastname[], entry *pHead)
 {
@@ -41,7 +40,6 @@ static entry *findName(char lastname[], entry *pHead)
             return pHead;
         }
         DEBUG_LOG("find string = %s\n", pHead->lastName);
-        count++;
         prev = pHead;
         pHead = pHead->pNext;
     }
@@ -197,6 +195,7 @@ static entry *phonebook_append(char *fileName)
 static void phonebook_remove(char lastName[])
 {
     entry *e = findName(lastName, headPtr);
+    entry *new_entry_pool;
     assert(e && "remove error");
 
     if (e == headPtr)
