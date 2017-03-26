@@ -29,7 +29,6 @@ static off_t file_size;
 static entry *findName(char lastname[], entry *pHead)
 {
     size_t len = strlen(lastname);
-    count = 0;
     while (pHead) {
         if (strncasecmp(lastname, pHead->lastName, len) == 0
                 && (pHead->lastName[len] == '\n' ||
@@ -195,10 +194,11 @@ static entry *phonebook_append(char *fileName)
 static void phonebook_remove(char lastName[])
 {
     entry *e = findName(lastName, headPtr);
-    entry *new_entry_pool;
-    assert(e && "remove error");
 
-    if (e == headPtr)
+    if (e == NULL) {
+        printf("Target not exist.\n");
+        return;
+    } else if (e == headPtr)
         headPtr = e->pNext;
     else
         prev->pNext = e->pNext;

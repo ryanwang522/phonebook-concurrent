@@ -79,6 +79,8 @@ int main(int argc, char *argv[])
 
     /* Test remove */
     Phonebook.remove("zyoba");
+    if (Phonebook.findName("zyoba") == NULL)
+        printf("Remove success\n");
 
     /* Release memory */
     Phonebook.free();
