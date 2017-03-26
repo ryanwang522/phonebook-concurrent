@@ -70,9 +70,11 @@ static entry *phonebook_append(char *fileName)
 static void phonebook_remove(char lastName[])
 {
     entry *e = findName(lastName, headPtr);
-    assert(e && "remove error");
 
-    if (e == headPtr)
+    if (e == NULL) {
+        printf("Target not exist.\n");
+        return;
+    } else if (e == headPtr)
         headPtr = e->pNext;
     else
         prev->pNext = e->pNext;
