@@ -19,15 +19,18 @@
 #endif
 
 static entry *headPtr;
+static entry *prev;
 static entry *entry_pool;
 static pthread_t threads[THREAD_NUM];
 static thread_arg *thread_args[THREAD_NUM];
 static char *map;
 static off_t file_size;
+static int count = 0;
 
 static entry *findName(char lastname[], entry *pHead)
 {
     size_t len = strlen(lastname);
+    count = 0;
     while (pHead) {
         if (strncasecmp(lastname, pHead->lastName, len) == 0
                 && (pHead->lastName[len] == '\n' ||
@@ -38,6 +41,8 @@ static entry *findName(char lastname[], entry *pHead)
             return pHead;
         }
         DEBUG_LOG("find string = %s\n", pHead->lastName);
+        count++;
+        prev = pHead;
         pHead = pHead->pNext;
     }
     return NULL;
@@ -101,6 +106,16 @@ void show_entry(entry *pHead)
         pHead = pHead->pNext;
     }
     printf("%d\n", count);
+}
+
+int Length(entry *pHead)
+{
+    int num = 0;
+    while (pHead) {
+        num++;
+        pHead = pHead->pNext;
+    }
+    return num;
 }
 
 static double diff_in_second(struct timespec t1, struct timespec t2)
@@ -179,6 +194,19 @@ static entry *phonebook_append(char *fileName)
     return headPtr;
 }
 
+static void phonebook_remove(char lastName[])
+{
+    entry *e = findName(lastName, headPtr);
+    assert(e && "remove error");
+
+    if (e == headPtr)
+        headPtr = e->pNext;
+    else
+        prev->pNext = e->pNext;
+
+    free(e->dtl);
+}
+
 static void phonebook_free()
 {
     entry *current = headPtr;
@@ -199,5 +227,6 @@ struct __API Phonebook = {
     .initialize = phonebook_init,
     .findName = phonebook_findName,
     .append = phonebook_append,
+    .remove = phonebook_remove,
     .free = phonebook_free,
 };

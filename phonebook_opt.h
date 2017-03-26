@@ -39,13 +39,14 @@ typedef struct _thread_argument {
 } thread_arg;
 
 void show_entry(entry *pHead);
-
+int Length(entry *pHead);
 static double diff_in_second(struct timespec t1, struct timespec t2);
 
 extern struct __API {
     void (*initialize)();
     entry *(*findName)(char lastName[]);
     entry *(*append)(char *fileName);
+    void (*remove)(char lastName[]);
     void (*free)();
 } Phonebook;
 

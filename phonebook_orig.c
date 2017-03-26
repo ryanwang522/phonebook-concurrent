@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "phonebook_orig.h"
 
 static entry *headPtr;
+static entry *prev;
 
 /* original version */
 static entry *findName(char lastname[], entry *pHead)
@@ -13,6 +15,7 @@ static entry *findName(char lastname[], entry *pHead)
     while (pHead) {
         if (strcasecmp(lastname, pHead->lastName) == 0)
             return pHead;
+        prev = pHead;
         pHead = pHead->pNext;
     }
     return NULL;
@@ -64,6 +67,19 @@ static entry *phonebook_append(char *fileName)
     return headPtr;
 }
 
+static void phonebook_remove(char lastName[])
+{
+    entry *e = findName(lastName, headPtr);
+    assert(e && "remove error");
+
+    if (e == headPtr)
+        headPtr = e->pNext;
+    else
+        prev->pNext = e->pNext;
+    free(e);
+}
+
+
 static void phonebook_free()
 {
     entry *e;
@@ -78,5 +94,6 @@ struct __API Phonebook = {
     .initialize = phonebook_init,
     .findName = phonebook_findName,
     .append = phonebook_append,
+    .remove = phonebook_remove,
     .free = phonebook_free,
 };
