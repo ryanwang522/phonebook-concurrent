@@ -117,7 +117,7 @@ static void freeSpace(entry pHead)
 Phonebook OrigPBProvider= {
     .findLastName = findLastName,
     .appendByFile = appendByFile,
-    .remove = removeByLastName,
+    .removeByLastName = removeByLastName,
     .checkAPI = checkAPI,
     .write = writeFile,
     .free = freeSpace,

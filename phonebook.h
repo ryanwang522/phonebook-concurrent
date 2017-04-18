@@ -6,10 +6,9 @@
 typedef struct __PHONE_BOOK_ENTRY *entry;
 
 typedef struct __API {
-    void (*initialize)();
     entry (*findLastName)(char *lastName, entry pHead);
     entry (*appendByFile)(char *fileName);
-    void (*remove)(char *lastName, entry pHead);
+    void (*removeByLastName)(char *lastName, entry pHead);
     void (*checkAPI)(char *lastName, entry pHead);
     void (*write)(double cpu_time[]);
     void (*free)(entry pHead);

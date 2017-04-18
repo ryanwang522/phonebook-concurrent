@@ -32,10 +32,10 @@ tools/text_align: text_align.c tools/tool-text_align.c
 	$(CC) $(CFLAGS_common) $^ -o $@
 
 phonebook_orig: $(SRCS_common) $(SRCS)
-	$(CC) $(CFLAGS) -DSELECTOR=0 -o $@ $(SRCS_common) $(SRCS)
+	$(CC) $(CFLAGS) -DSELECTOR=0 -o $@ $^
 
 phonebook_opt: $(SRCS_common) $(SRCS)
-	$(CC) $(CFLAGS) -DSELECTOR=1 -o $@ $(SRCS_common) $(SRCS)
+	$(CC) $(CFLAGS) -DSELECTOR=1 -o $@ $^
 
 run: $(EXEC)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches

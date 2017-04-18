@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     printf("execution time of findName() : %lf sec\n", cpu_time[1]);
 
     /* Test remove */
-    pb->remove("zyoba", pHead);
+    pb->removeByLastName("zyoba", pHead);
     if (pb->findLastName("zyoba", pHead) == NULL)
         printf("Remove success\n");
 

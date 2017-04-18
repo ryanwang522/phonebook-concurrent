@@ -15,7 +15,6 @@
 #include "debug.h"
 
 #define ALIGN_FILE "align.txt"
-#define OPT 1
 
 #ifndef THREAD_NUM
 #define THREAD_NUM 4
@@ -57,22 +56,6 @@ static thread_arg *thread_args[THREAD_NUM];
 static char *map;
 static off_t file_size;
 
-#ifdef DEBUG
-static double diff_in_second(struct timespec t1,
-                             struct timespec t2)
-{
-    struct timespec diff;
-    if (t2.tv_nsec-t1.tv_nsec < 0) {
-        diff.tv_sec  = t2.tv_sec - t1.tv_sec - 1;
-        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec + 1000000000;
-    } else {
-        diff.tv_sec  = t2.tv_sec - t1.tv_sec;
-        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec;
-    }
-    return (diff.tv_sec + diff.tv_nsec / 1000000000.0);
-}
-#endif
-
 static entry findLastName(char *lastName, entry pHead)
 {
     size_t len = strlen(lastName);
@@ -112,35 +95,23 @@ static thread_arg *createThread_arg(char *data_begin, char *data_end,
  */
 static void append(void *arg)
 {
-#ifdef DEBUG
-    struct timespec start, end;
-    double cpu_time;
-
-    clock_gettime(CLOCK_REALTIME, &start);
-#endif
+    // Remove previous debug code
 
     thread_arg *t_arg = (thread_arg *) arg;
 
-    int count = 0;
-    entry j = t_arg->lEntryPool_begin;
-    for (char *i = t_arg->data_begin; i < t_arg->data_end;
-            i += MAX_LAST_NAME_SIZE * t_arg->numOfThread,
-            j += t_arg->numOfThread, count++) {
-        /* Append the new at the end of the local linked list */
-        t_arg->lEntry_tail->pNext = j;
+    char *data = t_arg->data_begin;
+    entry localPtr = t_arg->lEntryPool_begin;
+
+    while (data < t_arg->data_end) {
+        t_arg->lEntry_tail->pNext = localPtr;
         t_arg->lEntry_tail = t_arg->lEntry_tail->pNext;
-        t_arg->lEntry_tail->lastName = i;
+        t_arg->lEntry_tail->lastName = data;
         t_arg->lEntry_tail->pNext = NULL;
         t_arg->lEntry_tail->dtl = NULL;
-        DEBUG_LOG("thread %d t_argend string = %s\n",
-                  t_arg->threadID, t_arg->lEntry_tail->lastName);
-    }
-#ifdef DEBUG
-    clock_gettime(CLOCK_REALTIME, &end);
-    cpu_time = diff_in_second(start, end);
-#endif
 
-    DEBUG_LOG("thread take %lf sec, count %d\n", cpu_time, count);
+        data += MAX_LAST_NAME_SIZE * t_arg->numOfThread;
+        localPtr += t_arg->numOfThread;
+    }
 
     pthread_exit(NULL);
 }
@@ -175,15 +146,14 @@ static entry appendByFile(char *fileName)
                         file_size / MAX_LAST_NAME_SIZE);
     assert(entry_pool && "entry_pool error");
 
-    /* Prepare for multi-threading */
-    for (i = 0; i < THREAD_NUM; i++)
+    /* Prepare for multi-threading & Deliver jobs to threads */
+    for (i = 0; i < THREAD_NUM; i++) {
         // Created by malloc, remeber to free them.
-        thread_args[i] = createThread_arg(map + MAX_LAST_NAME_SIZE * i, map + file_size, i, THREAD_NUM, entry_pool + i);
-
-    /* Deliver the jobs to all threads and wait for completing */
-    for (i = 0; i < THREAD_NUM; i++)
+        thread_args[i] = createThread_arg(map + MAX_LAST_NAME_SIZE * i,
+                                          map + file_size, i, THREAD_NUM, entry_pool + i);
         pthread_create(&threads[i], NULL, (void *)&append,
                        (void *)thread_args[i]);
+    }
 
     for (i = 0; i < THREAD_NUM; i++)
         pthread_join(threads[i], NULL);
@@ -261,7 +231,7 @@ static void freeSpace(entry pHead)
 Phonebook OptPBProvider= {
     .findLastName = findLastName,
     .appendByFile = appendByFile,
-    .remove = removeByLastName,
+    .removeByLastName = removeByLastName,
     .checkAPI = checkAPI,
     .write = writeFile,
     .free = freeSpace,
