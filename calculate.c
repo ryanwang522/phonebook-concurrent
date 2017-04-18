@@ -44,7 +44,7 @@ int main(void)
     }
     fprintf(output, "append() %lf %lf\n", orig_sum_a / 100.0,
             opt_sum_a / 100.0);
-    fprintf(output, "findName() %lf %lf", orig_sum_f / 100.0,
+    fprintf(output, "findLastName() %lf %lf", orig_sum_f / 100.0,
             opt_sum_f / 100.0);
     fclose(output);
     fclose(fp);

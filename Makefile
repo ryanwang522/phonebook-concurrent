@@ -1,18 +1,16 @@
 CC ?= gcc
-CFLAGS_common ?= -Wall -std=gnu99
-CFLAGS_orig = -O0
-CFLAGS_opt  = -O0 -pthread -g -pg
+CFLAGS ?= -Wall -std=gnu99 -O0 -pthread -g -pg
 
 ifdef CHECK_LEAK
-CFLAGS_common += -fsanitize=address -fno-omit-frame-pointer
+CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 
 ifdef THREAD
-CFLAGS_opt  += -D THREAD_NUM=${THREAD}
+CFLAGS  += -D THREAD_NUM=${THREAD}
 endif
 
 ifeq ($(strip $(DEBUG)),1)
-CFLAGS_opt += -DDEBUG -g
+CFLAGS += -DDEBUG -g
 endif
 
 EXEC = phonebook_orig phonebook_opt
@@ -25,19 +23,19 @@ $(GIT_HOOKS):
 	@echo
 
 SRCS_common = main.c
+SRCS = \
+    phonebook_orig.c \
+    phonebook_opt.c \
+    text_align.c
 
 tools/text_align: text_align.c tools/tool-text_align.c
 	$(CC) $(CFLAGS_common) $^ -o $@
 
-phonebook_orig: $(SRCS_common) phonebook_orig.c phonebook_orig.h
-	$(CC) $(CFLAGS_common) $(CFLAGS_orig) \
-		-DIMPL="\"$@.h\"" -o $@ \
-		$(SRCS_common) $@.c
+phonebook_orig: $(SRCS_common) $(SRCS)
+	$(CC) $(CFLAGS) -DSELECTOR=0 -o $@ $(SRCS_common) $(SRCS)
 
-phonebook_opt: $(SRCS_common) phonebook_opt.c phonebook_opt.h text_align.c
-	$(CC) $(CFLAGS_common) $(CFLAGS_opt) \
-		-DIMPL="\"$@.h\"" -o $@ \
-		$(SRCS_common) $@.c text_align.c
+phonebook_opt: $(SRCS_common) $(SRCS)
+	$(CC) $(CFLAGS) -DSELECTOR=1 -o $@ $(SRCS_common) $(SRCS)
 
 run: $(EXEC)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches

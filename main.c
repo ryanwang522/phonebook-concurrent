@@ -3,21 +3,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <assert.h>
-#include IMPL
-
-#ifndef OPT
-#define OUTPUT_FILE "orig.txt"
-
-#else
-#define OUTPUT_FILE "opt.txt"
-#endif
+#include "phonebook.h"
 
 #ifndef THREAD_NUM
 #define THREAD_NUM 4
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
+
+Phonebook *PBProvider[] = {
+    &OrigPBProvider,
+    &OptPBProvider,
+};
 
 static double diff_in_second(struct timespec t1, struct timespec t2)
 {
@@ -34,29 +31,25 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 
 int main(int argc, char *argv[])
 {
+    Phonebook *pb = PBProvider[SELECTOR];
+
     struct timespec start, end;
-    double cpu_time1,cpu_time2;
-
-    Phonebook.initialize();
-
-    /* Build the entry */
-    entry *pHead;
-    printf("size of entry : %lu bytes\n", sizeof(entry));
+    double cpu_time[2];
+    entry pHead;
 
     /* Compute execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-    pHead =  Phonebook.append(DICT_FILE);
+    pHead =  pb->appendByFile(DICT_FILE);
     clock_gettime(CLOCK_REALTIME, &end);
 
-    cpu_time1 = diff_in_second(start, end);
+    cpu_time[0] = diff_in_second(start, end);
 
     /* Find the given entry */
     /* the givn last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
 
-    assert(Phonebook.findName(input) &&
-           "Did you implement findName() in " IMPL "?");
-    assert(0 == strcmp(Phonebook.findName(input)->lastName, "zyxel"));
+    /* check findLastName */
+    pb->checkAPI(input, pHead);
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
@@ -64,26 +57,23 @@ int main(int argc, char *argv[])
 
     /* Compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-    Phonebook.findName(input);
+    pb->findLastName(input, pHead);
     clock_gettime(CLOCK_REALTIME, &end);
-    cpu_time2 = diff_in_second(start, end);
+    cpu_time[1] = diff_in_second(start, end);
 
     /* Write the execution time to file. */
-    FILE *output;
-    output = fopen(OUTPUT_FILE, "a");
-    fprintf(output, "append() findName() %lf %lf\n", cpu_time1, cpu_time2);
-    fclose(output);
+    pb->write(cpu_time);
 
-    printf("execution time of append() : %lf sec\n", cpu_time1);
-    printf("execution time of findName() : %lf sec\n", cpu_time2);
+    printf("execution time of append() : %lf sec\n", cpu_time[0]);
+    printf("execution time of findName() : %lf sec\n", cpu_time[1]);
 
     /* Test remove */
-    Phonebook.remove("zyoba");
-    if (Phonebook.findName("zyoba") == NULL)
+    pb->remove("zyoba", pHead);
+    if (pb->findLastName("zyoba", pHead) == NULL)
         printf("Remove success\n");
 
     /* Release memory */
-    Phonebook.free();
+    pb->free(pHead);
 
     return 0;
 }
