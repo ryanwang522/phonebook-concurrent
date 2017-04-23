@@ -4,6 +4,10 @@
 #define MAX_LAST_NAME_SIZE 16
 
 typedef struct __PHONE_BOOK_ENTRY *entry;
+typedef struct __PHONE_BOOK_ENTRY pbEntry;
+
+#define allocSpace(type) malloc(gen(type))
+#define allocSpaceFor(type, objectNum) malloc(gen(type) * objectNum)
 
 typedef struct __API {
     entry (*findLastName)(char *lastName, entry pHead);

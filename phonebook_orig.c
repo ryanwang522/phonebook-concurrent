@@ -6,6 +6,11 @@
 
 #include "phonebook.h"
 
+#define gen(X) _Generic((X), \
+                int *: sizeof(int), \
+                char *: sizeof(char), \
+                entry: sizeof(pbEntry))
+
 struct __PHONE_BOOK_ENTRY {
     char lastName[MAX_LAST_NAME_SIZE];
     char firstName[16];
@@ -37,7 +42,7 @@ static entry findLastName(char *lastName, entry pHead)
 static entry append(char *lastName, entry e)
 {
     /* allocate memory for the new entry and put lastName */
-    e->pNext = malloc(sizeof(*e->pNext));
+    e->pNext = allocSpace(e->pNext);
     e = e->pNext;
     strcpy(e->lastName, lastName);
     e->pNext = NULL;
@@ -56,9 +61,9 @@ static entry appendByFile(char *fileName)
     int i = 0;
     char line[MAX_LAST_NAME_SIZE];
     entry pHead, e;
-    printf("size of entry : %lu bytes\n", sizeof(entry));
+    printf("size of entry : %lu bytes\n", sizeof(pbEntry));
 
-    pHead = malloc(sizeof(*pHead));
+    pHead = allocSpace(pHead);
     e = pHead;
     e->pNext = NULL;
 

@@ -20,6 +20,13 @@
 #define THREAD_NUM 4
 #endif
 
+#define gen(X) _Generic((X), \
+                int *: sizeof(int), \
+                char *: sizeof(char), \
+                entry: sizeof(pbEntry), \
+                detail *: sizeof(detail), \
+                thread_arg *: sizeof(thread_arg))
+
 typedef struct _detail {
     char firstName[16];
     char email[16];
@@ -65,7 +72,7 @@ static entry findLastName(char *lastName, entry pHead)
                     pHead->lastName[len] == '\0')) {
             pHead->lastName[len] = '\0';
             if (!pHead->dtl)
-                pHead->dtl = (pdetail) malloc(sizeof(detail));
+                pHead->dtl = (pdetail) allocSpace(pHead->dtl);
             return pHead;
         }
         DEBUG_LOG("find string = %s\n", pHead->lastName);
@@ -79,7 +86,7 @@ static thread_arg *createThread_arg(char *data_begin, char *data_end,
                                     int threadID, int numOfThread,
                                     entry entryPool)
 {
-    thread_arg *new_arg = (thread_arg *) malloc(sizeof(thread_arg));
+    thread_arg *new_arg = (thread_arg *) allocSpace(new_arg);
 
     new_arg->data_begin = data_begin;
     new_arg->data_end = data_end;
@@ -142,8 +149,8 @@ static entry appendByFile(char *fileName)
     map = mmap(NULL, file_size,
                PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
     assert(map && "mmap error");
-    entry_pool = malloc(sizeof(*entry_pool) *
-                        file_size / MAX_LAST_NAME_SIZE);
+
+    entry_pool = allocSpaceFor(entry_pool, file_size / MAX_LAST_NAME_SIZE);
     assert(entry_pool && "entry_pool error");
 
     /* Prepare for multi-threading & Deliver jobs to threads */
