@@ -67,12 +67,14 @@ static entry findLastName(char *lastName, entry pHead)
 {
     size_t len = strlen(lastName);
     while (pHead) {
-        if (strncasecmp(lastName, pHead->lastName, len) == 0
+        if (!strncasecmp(lastName, pHead->lastName, len)
                 && (pHead->lastName[len] == '\n' ||
                     pHead->lastName[len] == '\0')) {
             pHead->lastName[len] = '\0';
-            if (!pHead->dtl)
+            if (!pHead->dtl) {
                 pHead->dtl = (pdetail) allocSpace(pHead->dtl);
+                assert(pHead->dtl && "malloc for pHead->dtl error");
+            }
             return pHead;
         }
         DEBUG_LOG("find string = %s\n", pHead->lastName);
@@ -87,6 +89,7 @@ static thread_arg *createThread_arg(char *data_begin, char *data_end,
                                     entry entryPool)
 {
     thread_arg *new_arg = (thread_arg *) allocSpace(new_arg);
+    assert(new_arg && "malloc for new_arg error\n");
 
     new_arg->data_begin = data_begin;
     new_arg->data_end = data_end;
@@ -133,10 +136,12 @@ void show_entry(entry pHead)
 
 static entry appendByFile(char *fileName)
 {
-    int i = 0;
+    int i;
     /* File preprocessing */
     text_align(fileName, ALIGN_FILE, MAX_LAST_NAME_SIZE);
     int fd = open(ALIGN_FILE, O_RDONLY | O_NONBLOCK);
+    assert(fd && "open ALIGN_FILE error");
+
     file_size = fsize(ALIGN_FILE);
 
     /* Build the entry */
@@ -215,6 +220,7 @@ static void writeFile(double cpu_time[])
 {
     FILE *output;
     output = fopen("opt.txt", "a");
+    assert(output && "fopen opt.txt error");
     fprintf(output, "append() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
     fclose(output);
 }

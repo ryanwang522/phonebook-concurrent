@@ -43,6 +43,8 @@ static entry append(char *lastName, entry e)
 {
     /* allocate memory for the new entry and put lastName */
     e->pNext = allocSpace(e->pNext);
+    assert(e->pNext && "malloc for e->pNext error");
+
     e = e->pNext;
     strcpy(e->lastName, lastName);
     e->pNext = NULL;
@@ -53,10 +55,7 @@ static entry append(char *lastName, entry e)
 static entry appendByFile(char *fileName)
 {
     FILE *fp = fopen(fileName, "r");
-    if (!fp) {
-        printf("cannot open the file!\n");
-        return NULL;
-    }
+    assert(fp && "fopen fileName error");
 
     int i = 0;
     char line[MAX_LAST_NAME_SIZE];
@@ -64,6 +63,8 @@ static entry appendByFile(char *fileName)
     printf("size of entry : %lu bytes\n", sizeof(pbEntry));
 
     pHead = allocSpace(pHead);
+    assert(pHead && "malloc for pHead error");
+
     e = pHead;
     e->pNext = NULL;
 
@@ -105,6 +106,8 @@ static void writeFile(double cpu_time[])
 {
     FILE *output;
     output = fopen("orig.txt", "a");
+    assert(output && "fopen orig.txt error");
+
     fprintf(output, "append() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
     fclose(output);
 }
