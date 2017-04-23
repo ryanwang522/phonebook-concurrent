@@ -141,7 +141,7 @@ static entry appendByFile(char *fileName)
 
     /* Build the entry */
     entry pHead, e;
-    printf("size of entry : %lu bytes\n", sizeof(entry));
+    printf("size of entry : %lu bytes\n", sizeof(pbEntry));
 
     pthread_t threads[THREAD_NUM];
 
