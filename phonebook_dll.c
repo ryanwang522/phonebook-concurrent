@@ -13,6 +13,7 @@
 #include "text_align.h"
 #include "phonebook.h"
 #include "debug.h"
+#include "list.h"
 
 #define ALIGN_FILE "align.txt"
 
@@ -43,8 +44,8 @@ typedef detail *pdetail;
 
 struct __PHONE_BOOK_ENTRY {
     char *lastName;
-    struct __PHONE_BOOK_ENTRY *pNext;
     pdetail dtl;
+    list_t list;
 };
 
 typedef struct __THREAD_ARGUMENT {
@@ -52,12 +53,10 @@ typedef struct __THREAD_ARGUMENT {
     char *data_end;
     int threadID;
     int numOfThread;
-    entry lEntryPool_begin;    /* The local entry pool */
-    entry lEntry_head; /* local entry linked list */
-    entry lEntry_tail; /* local entry linked list */
+    entry lEntryPool_begin;     /* local entry pool */
+    list_t *localListHead;      /* local list head */
 } thread_arg;
 
-static entry prev;
 static entry entry_pool;
 static thread_arg *thread_args[THREAD_NUM];
 static char *map;
@@ -66,20 +65,19 @@ static off_t file_size;
 static entry findLastName(char *lastName, entry pHead)
 {
     size_t len = strlen(lastName);
-    while (pHead) {
-        if (!strncasecmp(lastName, pHead->lastName, len)
-                && (pHead->lastName[len] == '\n' ||
-                    pHead->lastName[len] == '\0')) {
-            pHead->lastName[len] = '\0';
-            if (!pHead->dtl) {
-                pHead->dtl = (pdetail) allocSpace(pHead->dtl);
-                assert(pHead->dtl && "malloc for pHead->dtl error");
+    entry curr = pHead;
+
+    list_for_each_entry(curr, &(pHead->list), list) {
+        if (!strncasecmp(lastName, curr->lastName, len)
+                && (curr->lastName[len] == '\n' ||
+                    curr->lastName[len] == '\0')) {
+            curr->lastName[len] = '\0';
+            if (!curr->dtl) {
+                curr->dtl = (pdetail) allocSpace(curr->dtl);
+                assert(curr->dtl && "malloc for curr->dtl error");
             }
-            return pHead;
+            return curr;
         }
-        DEBUG_LOG("find string = %s\n", pHead->lastName);
-        prev = pHead;
-        pHead = pHead->pNext;
     }
     return NULL;
 }
@@ -96,7 +94,8 @@ static thread_arg *createThread_arg(char *data_begin, char *data_end,
     new_arg->threadID = threadID;
     new_arg->numOfThread = numOfThread;
     new_arg->lEntryPool_begin = entryPool;
-    new_arg->lEntry_head = new_arg->lEntry_tail = entryPool;
+    INIT_LIST_HEAD(&(entryPool->list));
+    new_arg->localListHead = &(entryPool->list);
     return new_arg;
 }
 
@@ -110,28 +109,25 @@ static void append(void *arg)
     thread_arg *t_arg = (thread_arg *) arg;
 
     char *data = t_arg->data_begin;
-    entry localPtr = t_arg->lEntryPool_begin;
+    entry localEntry = t_arg->lEntryPool_begin;
 
     while (data < t_arg->data_end) {
-        t_arg->lEntry_tail->pNext = localPtr;
-        t_arg->lEntry_tail = t_arg->lEntry_tail->pNext;
-        t_arg->lEntry_tail->lastName = data;
-        t_arg->lEntry_tail->pNext = NULL;
-        t_arg->lEntry_tail->dtl = NULL;
+        localEntry->lastName = data;
+        localEntry->dtl = NULL;
+        list_add_tail(&(localEntry->list),
+                      &(t_arg->lEntryPool_begin->list));
 
         data += MAX_LAST_NAME_SIZE * t_arg->numOfThread;
-        localPtr += t_arg->numOfThread;
+        localEntry += t_arg->numOfThread;
     }
 
     pthread_exit(NULL);
 }
 
-void show_entry(entry pHead)
+void show_list_entry(entry pHead)
 {
-    while (pHead) {
-        printf("%s", pHead->lastName);
-        pHead = pHead->pNext;
-    }
+    list_for_each_entry(pHead, &(pHead->list), list)
+    printf("%s", pHead->lastName);
 }
 
 static entry appendByFile(char *fileName)
@@ -145,7 +141,7 @@ static entry appendByFile(char *fileName)
     file_size = fsize(ALIGN_FILE);
 
     /* Build the entry */
-    entry pHead, e;
+    entry pHead;
     printf("size of entry : %lu bytes\n", sizeof(pbEntry));
 
     pthread_t threads[THREAD_NUM];
@@ -171,23 +167,10 @@ static entry appendByFile(char *fileName)
         pthread_join(threads[i], NULL);
 
     /* Connect the linked list of each thread */
-    pHead = thread_args[0]->lEntry_head;
-    DEBUG_LOG("Connect 0 head string %s %p\n",
-              pHead->lastName, thread_args[0]->data_begin);
-    e = thread_args[0]->lEntry_tail;
-    DEBUG_LOG("Connect 0 tail string %s %p\n",
-              e->lastName, thread_args[0]->data_begin);
-    DEBUG_LOG("round 0\n");
+    pHead = thread_args[0]->lEntryPool_begin;
 
     for (i = 1; i < THREAD_NUM; i++) {
-        e->pNext = thread_args[i]->lEntry_head;
-        DEBUG_LOG("Connect %d head string %s %p\n", i,
-                  e->pNext->lastName, thread_args[i]->data_begin);
-
-        e = thread_args[i]->lEntry_tail;
-        DEBUG_LOG("Connect %d tail string %s %p\n", i,
-                  e->lastName, thread_args[i]->data_begin);
-        DEBUG_LOG("round %d\n", i);
+        list_splice_tail(thread_args[i]->localListHead, pHead->list.prev);
     }
 
     close(fd);
@@ -201,10 +184,10 @@ static void removeByLastName(char *lastName, entry pHead)
     if (!e) {
         printf("Target not exist.\n");
         return;
-    } else if (e == pHead)
-        pHead = e->pNext;
-    else
-        prev->pNext = e->pNext;
+    } else {
+        (e->list.next)->prev = e->list.prev;
+        (e->list.prev)->next = e->list.next;
+    }
 
     free(e->dtl);
 }
@@ -229,10 +212,8 @@ static void freeSpace(entry pHead)
 {
     entry e = pHead;
 
-    while (e) {
-        free(e->dtl);
-        e = e -> pNext;
-    }
+    list_for_each_entry(e, &(pHead->list), list)
+    free(e->dtl);
 
     free(entry_pool);
     for (int i = 0; i < THREAD_NUM; i++)
@@ -241,7 +222,7 @@ static void freeSpace(entry pHead)
     munmap(map, file_size);
 }
 
-Phonebook OptPBProvider= {
+Phonebook DllPBProvider= {
     .findLastName = findLastName,
     .appendByFile = appendByFile,
     .removeByLastName = removeByLastName,

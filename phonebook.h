@@ -20,5 +20,6 @@ typedef struct __API {
 
 extern Phonebook OrigPBProvider;
 extern Phonebook OptPBProvider;
+extern Phonebook DllPBProvider;
 
 #endif
