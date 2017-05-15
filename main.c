@@ -33,6 +33,7 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 
 int main(int argc, char *argv[])
 {
+    assert((argc == 2) && "Usage: ./phonebook impl_selector");
     assert((atoi(argv[1]) < 3) && "Can't find impl");
     Phonebook *pb = PBProvider[atoi(argv[1])];
 
