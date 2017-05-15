@@ -23,7 +23,7 @@ int main(void)
     }
     fclose(fp);
 
-    fp = fopen("opt.txt", "r");
+    fp = fopen("thread.txt", "r");
     if (!fp) {
         fp = fopen("orig.txt", "r");
         if (!fp) {
@@ -31,21 +31,44 @@ int main(void)
             exit(0);
         }
     }
-    double opt_sum_a = 0.0, opt_sum_f = 0.0, opt_a, opt_f;
+    double thread_sum_a = 0.0, thread_sum_f = 0.0, thread_a, thread_f;
     for (int i = 0; i < 100; i++) {
         if (feof(fp)) {
             printf("ERROR: You need 100 datum instead of %d\n", i);
             printf("run 'make run' longer to get enough information\n\n");
             exit(0);
         }
-        fscanf(fp, "%s %s %lf %lf\n", append, find,&opt_a, &opt_f);
-        opt_sum_a += opt_a;
-        opt_sum_f += opt_f;
+        fscanf(fp, "%s %s %lf %lf\n", append, find,&thread_a, &thread_f);
+        thread_sum_a += thread_a;
+        thread_sum_f += thread_f;
     }
-    fprintf(output, "append() %lf %lf\n", orig_sum_a / 100.0,
-            opt_sum_a / 100.0);
-    fprintf(output, "findLastName() %lf %lf", orig_sum_f / 100.0,
-            opt_sum_f / 100.0);
+    fclose(fp);
+
+    fp = fopen("dll.txt", "r");
+    if (!fp) {
+        fp = fopen("orig.txt", "r");
+        if (!fp) {
+            printf("ERROR opening input file opt.txt\n");
+            exit(0);
+        }
+    }
+    double dll_sum_a = 0.0, dll_sum_f = 0.0, dll_a, dll_f;
+    for (int i = 0; i < 100; i++) {
+        if (feof(fp)) {
+            printf("ERROR: You need 100 datum instead of %d\n", i);
+            printf("run 'make run' longer to get enough information\n\n");
+            exit(0);
+        }
+        fscanf(fp, "%s %s %lf %lf\n", append, find,&dll_a, &dll_f);
+        dll_sum_a += dll_a;
+        dll_sum_f += dll_f;
+    }
+
+    fprintf(output, "append() %lf %lf %lf\n", orig_sum_a / 100.0,
+            thread_sum_a / 100.0, dll_sum_a / 100.0);
+    fprintf(output, "findLastName() %lf %lf %lf",
+            orig_sum_f / 100.0, thread_sum_f / 100.0,
+            dll_sum_f / 100.0);
     fclose(output);
     fclose(fp);
     return 0;

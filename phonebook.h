@@ -10,16 +10,16 @@ typedef struct __PHONE_BOOK_ENTRY pbEntry;
 #define allocSpaceFor(type, objectNum) malloc(gen(type) * objectNum)
 
 typedef struct __API {
-    entry (*findLastName)(char *lastName, entry pHead);
+    entry (*find)(char *lastName, entry pHead);
     entry (*appendByFile)(char *fileName);
-    void (*removeByLastName)(char *lastName, entry pHead);
-    void (*checkAPI)(char *lastName, entry pHead);
+    void (*remove)(char *lastName, entry pHead);
     void (*write)(double cpu_time[]);
     void (*free)(entry pHead);
+    char *(*getLastName)(entry pHead);
 } Phonebook;
 
 extern Phonebook OrigPBProvider;
-extern Phonebook OptPBProvider;
+extern Phonebook ThreadPBProvider;
 extern Phonebook DllPBProvider;
 
 #endif

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 #include "phonebook.h"
 
 #ifndef THREAD_NUM
@@ -13,7 +14,7 @@
 
 Phonebook *PBProvider[] = {
     &OrigPBProvider,
-    &OptPBProvider,
+    &ThreadPBProvider,
     &DllPBProvider,
 };
 
@@ -32,25 +33,22 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 
 int main(int argc, char *argv[])
 {
-    Phonebook *pb = PBProvider[SELECTOR];
+    assert((atoi(argv[1]) < 3) && "Can't find impl");
+    Phonebook *pb = PBProvider[atoi(argv[1])];
 
+    entry pHead;
     struct timespec start, end;
     double cpu_time[2];
-    entry pHead;
-
-    /* Compute execution time */
-    clock_gettime(CLOCK_REALTIME, &start);
-    pHead =  pb->appendByFile(DICT_FILE);
-    clock_gettime(CLOCK_REALTIME, &end);
-
-    cpu_time[0] = diff_in_second(start, end);
-
-    /* Find the given entry */
     /* the givn last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
 
-    /* check findLastName */
-    pb->checkAPI(input, pHead);
+    /* Compute */
+    /* Compute execution time */
+    clock_gettime(CLOCK_REALTIME, &start);
+    pHead = pb->appendByFile(DICT_FILE);
+    clock_gettime(CLOCK_REALTIME, &end);
+
+    cpu_time[0] = diff_in_second(start, end);
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
@@ -58,7 +56,7 @@ int main(int argc, char *argv[])
 
     /* Compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-    pb->findLastName(input, pHead);
+    pb->find(input, pHead);
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time[1] = diff_in_second(start, end);
 
@@ -68,10 +66,15 @@ int main(int argc, char *argv[])
     printf("execution time of append() : %lf sec\n", cpu_time[0]);
     printf("execution time of findName() : %lf sec\n", cpu_time[1]);
 
+    /* Test */
+    /* Test find */
+    assert(pb->find(input, pHead) && "Did you implement find()?");
+    assert(!strcmp(pb->getLastName(pb->find(input, pHead)), input) &&
+           "Find error");
+
     /* Test remove */
-    pb->removeByLastName("zyoba", pHead);
-    if (pb->findLastName("zyoba", pHead) == NULL)
-        printf("Remove success\n");
+    pb->remove("zyoba", pHead);
+    assert(!pb->find("zyoba", pHead) && "Remove error");
 
     /* Release memory */
     pb->free(pHead);

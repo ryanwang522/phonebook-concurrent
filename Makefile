@@ -13,7 +13,7 @@ ifeq ($(strip $(DEBUG)),1)
 CFLAGS += -DDEBUG -g
 endif
 
-EXEC = phonebook_orig phonebook_opt phonebook_dll
+EXEC = phonebook
 GIT_HOOKS := .git/hooks/applied
 .PHONY: all
 all: $(GIT_HOOKS) $(EXEC)
@@ -22,36 +22,30 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
-SRCS_common = main.c
-SRCS = \
-    phonebook_orig.c \
-    phonebook_opt.c \
-	phonebook_dll.c \
+SRCS_common = \
+    main.c \
     text_align.c
 
 tools/text_align: text_align.c tools/tool-text_align.c
 	$(CC) $(CFLAGS_common) $^ -o $@
 
-phonebook_orig: $(SRCS_common) $(SRCS)
-	$(CC) $(CFLAGS) -DSELECTOR=0 -o $@ $^
-
-phonebook_opt: $(SRCS_common) $(SRCS)
-	$(CC) $(CFLAGS) -DSELECTOR=1 -o $@ $^
-
-phonebook_dll: $(SRCS_common) $(SRCS)
-	$(CC) $(CFLAGS) -DSELECTOR=2 -o $@ $^
+phonebook: $(SRCS_common) phonebook_orig.c phonebook_thread.c phonebook_dll.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 run: $(EXEC)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches
-	watch -d -t "./phonebook_orig && echo 3 | sudo tee /proc/sys/vm/drop_caches"
+	watch -d -t "./phonebook 0 && echo 3 | sudo tee /proc/sys/vm/drop_caches"
 
 cache-test: $(EXEC)
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
-		./phonebook_orig
+		./phonebook 0
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
-		./phonebook_opt
+		./phonebook 1
+	perf stat --repeat 100 \
+		-e cache-misses,cache-references,instructions,cycles \
+		./phonebook 2
 
 output.txt: cache-test calculate
 	./calculate
@@ -65,4 +59,4 @@ calculate: calculate.c
 .PHONY: clean
 clean:
 	$(RM) $(EXEC) *.o perf.* \
-	      	calculate orig.txt opt.txt output.txt runtime.png align.txt
+	      	calculate orig.txt thread.txt dll.txt output.txt runtime.png align.txt

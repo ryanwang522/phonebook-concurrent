@@ -192,17 +192,10 @@ static void removeByLastName(char *lastName, entry pHead)
     free(e->dtl);
 }
 
-static void checkAPI(char *lastName, entry pHead)
-{
-    assert(findLastName(lastName, pHead) &&
-           "Did you implement findLastName() in phonebook_opt ?");
-    assert(0 == strcmp(findLastName(lastName, pHead)->lastName, lastName));
-}
-
 static void writeFile(double cpu_time[])
 {
     FILE *output;
-    output = fopen("opt.txt", "a");
+    output = fopen("dll.txt", "a");
     assert(output && "fopen opt.txt error");
     fprintf(output, "append() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
     fclose(output);
@@ -222,11 +215,16 @@ static void freeSpace(entry pHead)
     munmap(map, file_size);
 }
 
+static char *getLastName(entry e)
+{
+    return e->lastName;
+}
+
 Phonebook DllPBProvider= {
-    .findLastName = findLastName,
+    .find = findLastName,
     .appendByFile = appendByFile,
-    .removeByLastName = removeByLastName,
-    .checkAPI = checkAPI,
+    .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,
+    .getLastName = getLastName,
 };

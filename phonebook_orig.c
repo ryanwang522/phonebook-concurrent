@@ -95,13 +95,6 @@ static void removeByLastName(char *lastName, entry pHead)
     free(e);
 }
 
-static void checkAPI(char *lastName, entry pHead)
-{
-    assert(findLastName(lastName, pHead) &&
-           "Did you implement findLastName() in phonebook_orig ?");
-    assert(0 == strcmp(findLastName(lastName, pHead)->lastName, lastName));
-}
-
 static void writeFile(double cpu_time[])
 {
     FILE *output;
@@ -122,11 +115,16 @@ static void freeSpace(entry pHead)
     }
 }
 
+static char *getLastName(entry e)
+{
+    return e->lastName;
+}
+
 Phonebook OrigPBProvider= {
-    .findLastName = findLastName,
+    .find = findLastName,
     .appendByFile = appendByFile,
-    .removeByLastName = removeByLastName,
-    .checkAPI = checkAPI,
+    .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,
+    .getLastName = getLastName,
 };
