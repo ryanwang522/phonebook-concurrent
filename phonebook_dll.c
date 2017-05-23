@@ -26,7 +26,8 @@
                 char *: sizeof(char), \
                 entry: sizeof(pbEntry), \
                 detail *: sizeof(detail), \
-                thread_arg *: sizeof(thread_arg))
+                thread_arg *: sizeof(thread_arg), \
+                info: sizeof(pbInfo))
 
 typedef struct __DETAIL {
     char firstName[16];
@@ -130,7 +131,7 @@ void show_list_entry(entry pHead)
     printf("%s", pHead->lastName);
 }
 
-static entry appendByFile(char *fileName)
+static entry import(char *fileName)
 {
     int i;
     /* File preprocessing */
@@ -215,16 +216,28 @@ static void freeSpace(entry pHead)
     munmap(map, file_size);
 }
 
-static char *getLastName(entry e)
+static info getInfo(entry e)
 {
-    return e->lastName;
+    info f = allocSpace(f);
+    assert(f && "malloc for f error");
+    strcpy(f->lastName, e->lastName);
+    strcpy(f->firstName, e->dtl->firstName);
+    strcpy(f->email, e->dtl->email);
+    strcpy(f->phone, e->dtl->phone);
+    strcpy(f->cell, e->dtl->cell);
+    strcpy(f->addr1, e->dtl->addr1);
+    strcpy(f->addr2, e->dtl->addr2);
+    strcpy(f->city, e->dtl->city);
+    strcpy(f->state, e->dtl->state);
+    strcpy(f->zip, e->dtl->zip);
+    return f;
 }
 
 Phonebook DllPBProvider= {
     .find = findLastName,
-    .appendByFile = appendByFile,
+    .import = import,
     .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,
-    .getLastName = getLastName,
+    .getInfo = getInfo,
 };

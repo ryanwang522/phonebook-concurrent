@@ -9,7 +9,8 @@
 #define gen(X) _Generic((X), \
                 int *: sizeof(int), \
                 char *: sizeof(char), \
-                entry: sizeof(pbEntry))
+                entry: sizeof(pbEntry), \
+                info: sizeof(pbInfo))
 
 struct __PHONE_BOOK_ENTRY {
     char lastName[MAX_LAST_NAME_SIZE];
@@ -52,7 +53,7 @@ static entry append(char *lastName, entry e)
     return e;
 }
 
-static entry appendByFile(char *fileName)
+static entry import(char *fileName)
 {
     FILE *fp = fopen(fileName, "r");
     assert(fp && "fopen fileName error");
@@ -115,16 +116,28 @@ static void freeSpace(entry pHead)
     }
 }
 
-static char *getLastName(entry e)
+static info getInfo(entry e)
 {
-    return e->lastName;
+    info f = allocSpace(f);
+    assert(f && "malloc for f error");
+    strcpy(f->lastName, e->lastName);
+    strcpy(f->firstName, e->firstName);
+    strcpy(f->email, e->email);
+    strcpy(f->phone, e->phone);
+    strcpy(f->cell, e->cell);
+    strcpy(f->addr1, e->addr1);
+    strcpy(f->addr2, e->addr2);
+    strcpy(f->city, e->city);
+    strcpy(f->state, e->state);
+    strcpy(f->zip, e->zip);
+    return f;
 }
 
 Phonebook OrigPBProvider= {
     .find = findLastName,
-    .appendByFile = appendByFile,
+    .import = import,
     .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,
-    .getLastName = getLastName,
+    .getInfo = getInfo,
 };
