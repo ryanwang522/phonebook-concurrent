@@ -133,9 +133,11 @@ static info getInfo(entry e)
     return f;
 }
 
+struct find_table_ f_t_orig[] = {{findLastName}};
+struct import_table_ i_t_orig[] = {{import}};
 Phonebook OrigPBProvider= {
-    .find = findLastName,
-    .import = import,
+    .ftable_ = f_t_orig,
+    .itable_ = i_t_orig,
     .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,

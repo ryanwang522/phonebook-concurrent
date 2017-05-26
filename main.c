@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     /* Compute */
     /* Compute execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-    pHead = pb->import(DICT_FILE);
+    pHead = pb->itable_->import(DICT_FILE);
     clock_gettime(CLOCK_REALTIME, &end);
 
     cpu_time[0] = diff_in_second(start, end);
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
     /* Compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-    pb->find(input, pHead);
+    pb->ftable_->find(input, pHead);
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time[1] = diff_in_second(start, end);
 
@@ -69,12 +69,12 @@ int main(int argc, char *argv[])
 
     /* Test */
     /* Test find */
-    assert(pb->find(input, pHead) && "Did you implement find()?");
-    assert(!strcmp(pb->getInfo(pb->find(input, pHead))->lastName,
+    assert(pb->ftable_->find(input, pHead) && "Did you implement find()?");
+    assert(!strcmp(pb->getInfo(pb->ftable_->find(input, pHead))->lastName,
                    input) && "Find error");
     /* Test remove */
     pb->remove("zyoba", pHead);
-    assert(!pb->find("zyoba", pHead) && "Remove error");
+    assert(!pb->ftable_->find("zyoba", pHead) && "Remove error");
 
     /* Release memory */
     pb->free(pHead);

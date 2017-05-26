@@ -25,16 +25,26 @@ struct __PHONE_BOOK_INFO {
 };
 
 typedef struct __API {
-    entry (*find)(char *lastName, entry pHead);
-    entry (*import)(char *fileName);
+    struct find_table_ *ftable_;
+    struct import_table_ *itable_;
     void (*remove)(char *lastName, entry pHead);
     void (*write)(double cpu_time[]);
     void (*free)(entry pHead);
     info (*getInfo)(entry e);
 } Phonebook;
 
+struct find_table_ {
+    entry (*find)(char *lastName, entry pHead);
+};
+
+struct import_table_ {
+    entry (*import)(char *fileName);
+};
+
 extern Phonebook OrigPBProvider;
 extern Phonebook ThreadPBProvider;
 extern Phonebook DllPBProvider;
 
+extern struct find_table_ f_t_orig[], f_t_thread[], f_t_dll[];
+extern struct import_table_ i_t_orig[], i_t_thread[], i_t_dll[];
 #endif

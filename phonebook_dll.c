@@ -233,9 +233,12 @@ static info getInfo(entry e)
     return f;
 }
 
+struct find_table_ f_t_dll[] = {{findLastName}};
+struct import_table_ i_t_dll[] = {{import}};
+
 Phonebook DllPBProvider= {
-    .find = findLastName,
-    .import = import,
+    .ftable_ = f_t_dll,
+    .itable_ = i_t_dll,
     .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,

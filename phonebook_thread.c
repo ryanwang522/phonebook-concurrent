@@ -252,9 +252,12 @@ static info getInfo(entry e)
     return f;
 }
 
+struct find_table_ f_t_thread[] = {{findLastName}};
+struct import_table_ i_t_thread[] = {{import}};
+
 Phonebook ThreadPBProvider= {
-    .find = findLastName,
-    .import = import,
+    .ftable_ = f_t_thread,
+    .itable_ = i_t_thread,
     .remove = removeByLastName,
     .write = writeFile,
     .free = freeSpace,
