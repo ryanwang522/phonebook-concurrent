@@ -125,10 +125,12 @@ static void append(void *arg)
     pthread_exit(NULL);
 }
 
-void show_list_entry(entry pHead)
+void showList(entry pHead)
 {
-    list_for_each_entry(pHead, &(pHead->list), list)
-    printf("%s", pHead->lastName);
+    entry curr = pHead;
+    list_for_each_entry(curr, &(pHead->list), list) {
+        printf("%s", curr->lastName);
+    }
 }
 
 static entry import(char *fileName)
@@ -167,11 +169,21 @@ static entry import(char *fileName)
     for (i = 0; i < THREAD_NUM; i++)
         pthread_join(threads[i], NULL);
 
-    /* Connect the linked list of each thread */
-    pHead = thread_args[0]->lEntryPool_begin;
+    /* In order to make good use of functions in `list.h`,
+     * we apply an empty head on each double linked-list.
+     * Cuz `list.h` is designed for "empty head" linked-list. */
+    entry emptyHead[THREAD_NUM];
+    for (i = 0; i < THREAD_NUM; i++) {
+        emptyHead[i] = allocSpace(emptyHead[i]);
+        INIT_LIST_HEAD(&(emptyHead[i]->list));
+        list_add_tail(&(emptyHead[i]->list), thread_args[i]->localListHead);
+    }
 
+    /* Connect the linked list of each thread */
+    pHead = emptyHead[0];
     for (i = 1; i < THREAD_NUM; i++) {
-        list_splice_tail(thread_args[i]->localListHead, pHead->list.prev);
+        list_splice_tail(&(emptyHead[i]->list), &pHead->list);
+        //free(emptyHead[i]);
     }
 
     close(fd);
@@ -186,11 +198,10 @@ static void removeByLastName(char *lastName, entry pHead)
         printf("Target not exist.\n");
         return;
     } else {
+        free(e->dtl);
         (e->list.next)->prev = e->list.prev;
         (e->list.prev)->next = e->list.next;
     }
-
-    free(e->dtl);
 }
 
 static void writeFile(double cpu_time[])
@@ -206,13 +217,15 @@ static void freeSpace(entry pHead)
 {
     entry e = pHead;
 
-    list_for_each_entry(e, &(pHead->list), list)
-    free(e->dtl);
+    list_for_each_entry(e, &(pHead->list), list) {
+        free(e->dtl);
+    }
 
     free(entry_pool);
     for (int i = 0; i < THREAD_NUM; i++)
         free(thread_args[i]);
 
+    free(pHead);
     munmap(map, file_size);
 }
 
