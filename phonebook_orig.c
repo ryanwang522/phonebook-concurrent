@@ -102,7 +102,7 @@ static void writeFile(double cpu_time[])
     output = fopen("orig.txt", "a");
     assert(output && "fopen orig.txt error");
 
-    fprintf(output, "append() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
+    fprintf(output, "import() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
     fclose(output);
 }
 

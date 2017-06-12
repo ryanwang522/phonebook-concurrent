@@ -197,8 +197,8 @@ static void writeFile(double cpu_time[])
 {
     FILE *output;
     output = fopen("dll.txt", "a");
-    assert(output && "fopen opt.txt error");
-    fprintf(output, "append() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
+    assert(output && "fopen dll.txt error");
+    fprintf(output, "import() findLastName() %lf %lf\n", cpu_time[0], cpu_time[1]);
     fclose(output);
 }
 
