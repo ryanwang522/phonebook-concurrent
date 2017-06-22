@@ -37,13 +37,17 @@ run: $(EXEC)
 	watch -d -t "./phonebook 0 && echo 3 | sudo tee /proc/sys/vm/drop_caches"
 
 cache-test: $(EXEC)
-	perf stat --repeat 100 \
+	echo 1 | sudo tee /proc/sys/vm/drop_caches
+	perf stat --repeat 200 \
 		-e cache-misses,cache-references,instructions,cycles \
 		./phonebook 0
-	perf stat --repeat 100 \
+	echo 1 | sudo tee /proc/sys/vm/drop_caches
+	perf stat --repeat 200 \
 		-e cache-misses,cache-references,instructions,cycles \
 		./phonebook 1
-	perf stat --repeat 100 \
+	rm align.txt    
+	echo 1 | sudo tee /proc/sys/vm/drop_caches
+	perf stat --repeat 200 \
 		-e cache-misses,cache-references,instructions,cycles \
 		./phonebook 2
 

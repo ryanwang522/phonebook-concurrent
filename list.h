@@ -7,20 +7,53 @@ typedef struct __LIST_HEAD {
 /* Declr an empty list head */
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
-static inline void INIT_LIST_HEAD(list_t *list)
+inline
+void INIT_LIST_HEAD(list_t *list)
+__attribute__((always_inline));
+
+inline
+int list_empty(const list_t *head)
+__attribute__((always_inline));
+
+inline
+void __list_add(list_t *new, list_t *prev, list_t *next)
+__attribute__((always_inline));
+
+inline
+void list_add_tail(list_t *new, list_t *head)
+__attribute__((always_inline));
+
+inline
+void list_add(list_t *new, list_t *head)
+__attribute__((always_inline));
+
+inline
+void __list_splice(const list_t *list, list_t *prev, list_t *next)
+__attribute__((always_inline));
+
+inline
+void list_splice(const list_t *list, list_t *head)
+__attribute__((always_inline));
+
+inline
+void list_splice_tail(list_t *list, list_t *head)
+__attribute__((always_inline));
+
+inline
+void INIT_LIST_HEAD(list_t *list)
 {
     list->next = list;
     list->prev = list;
 }
 
-static inline int list_empty(const list_t *head)
+inline
+int list_empty(const list_t *head)
 {
     return head->next == head;
 }
 
-static inline void __list_add(list_t *new,
-                              list_t *prev,
-                              list_t *next)
+inline
+void __list_add(list_t *new, list_t *prev, list_t *next)
 {
     next->prev = new;
     new->next = next;
@@ -29,19 +62,20 @@ static inline void __list_add(list_t *new,
 }
 
 /* Push to linked list's head (stack) */
-static inline void list_add(list_t *new, list_t *head)
+inline
+void list_add(list_t *new, list_t *head)
 {
     __list_add(new, head, head->next);
 }
 
-static inline void list_add_tail(list_t *new, list_t *head)
+inline
+void list_add_tail(list_t *new, list_t *head)
 {
     __list_add(new, head->prev, head);
 }
 
-static inline void __list_splice(const list_t *list,
-                                 list_t *prev,
-                                 list_t *next)
+inline
+void __list_splice(const list_t *list, list_t *prev, list_t *next)
 {
     list_t *first = list->next;
     list_t *last = list->prev;
@@ -58,7 +92,8 @@ static inline void __list_splice(const list_t *list,
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static inline void list_splice(const list_t *list, list_t *head)
+inline
+void list_splice(const list_t *list, list_t *head)
 {
     if (!list_empty(list)) {
         __list_splice(list, head, head->next);
@@ -70,7 +105,8 @@ static inline void list_splice(const list_t *list, list_t *head)
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static inline void list_splice_tail(list_t *list, list_t *head)
+inline
+void list_splice_tail(list_t *list, list_t *head)
 {
     if (!list_empty(list)) {
         __list_splice(list, head->prev, head);

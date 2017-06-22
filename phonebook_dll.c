@@ -183,7 +183,7 @@ static entry import(char *fileName)
     pHead = emptyHead[0];
     for (i = 1; i < THREAD_NUM; i++) {
         list_splice_tail(&(emptyHead[i]->list), &pHead->list);
-        //free(emptyHead[i]);
+        free(emptyHead[i]);
     }
 
     close(fd);
@@ -217,9 +217,8 @@ static void freeSpace(entry pHead)
 {
     entry e = pHead;
 
-    list_for_each_entry(e, &(pHead->list), list) {
-        free(e->dtl);
-    }
+    list_for_each_entry(e, &(pHead->list), list)
+    free(e->dtl);
 
     free(entry_pool);
     for (int i = 0; i < THREAD_NUM; i++)
